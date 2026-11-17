@@ -87,7 +87,8 @@ class AppHandler(SimpleHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
         self.send_header("Referrer-Policy", "same-origin")
-        if self.path.startswith("/api/") or self.path in ("/", "/index.html"):
+        clean_path = urlparse(self.path).path
+        if clean_path.startswith("/api/") or clean_path.endswith((".html", ".js", ".css")) or clean_path == "/":
             self.send_header("Cache-Control", "no-store")
         super().end_headers()
 
