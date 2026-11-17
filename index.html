@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111722">
+  <meta name="description" content="Mój Pulpit — prywatne środowisko dla własnych aplikacji.">
+  <title>Mój Pulpit</title>
+  <link rel="stylesheet" href="desktop.css">
+</head>
+<body>
+  <main class="desktop" id="desktop" aria-label="Mój Pulpit">
+    <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+    <div class="desktop-brand"><span class="brand-spark">✦</span><span>MÓJ<br>PULPIT</span></div>
+
+    <section class="icons" aria-label="Aplikacje">
+      <button class="desktop-icon" data-open="pdf" type="button">
+        <span class="app-icon pdf-icon"><span>PDF</span><i></i></span>
+        <span>PDF Studio</span>
+      </button>
+    </section>
+
+    <div class="window app-window" id="window-pdf" data-app="pdf" hidden>
+      <header class="window-titlebar">
+        <div class="window-title"><span class="mini-pdf">P</span><strong>PDF Studio</strong><small>lokalny edytor dokumentów</small></div>
+        <div class="window-controls">
+          <button data-action="minimize" aria-label="Minimalizuj">—</button>
+          <button data-action="maximize" aria-label="Maksymalizuj">□</button>
+          <button data-action="close" aria-label="Zamknij">×</button>
+        </div>
+      </header>
+      <div class="window-body"><iframe src="apps/pdf/index.html" title="PDF Studio" allow="clipboard-read; clipboard-write" sandbox="allow-scripts allow-same-origin allow-downloads allow-modals"></iframe></div>
+      <div class="resize-handle"></div>
+    </div>
+
+    <aside class="start-menu" id="startMenu" hidden>
+      <div class="start-head"><div class="avatar">M</div><div><strong>Mój Pulpit</strong><span>lokalne środowisko</span></div></div>
+      <label class="search"><span>⌕</span><input id="appSearch" type="search" placeholder="Szukaj aplikacji"></label>
+      <div class="start-label">APLIKACJE</div>
+      <button class="start-app" data-open="pdf"><span class="start-app-icon pdf-icon"><b>PDF</b></span><span><strong>PDF Studio</strong><small>Edytuj dokumenty</small></span><i>›</i></button>
+      <div class="start-footer"><span>Wszystko działa lokalnie</span><span>v0.1</span></div>
+    </aside>
+
+    <footer class="taskbar">
+      <button class="start-button" id="startButton" aria-label="Menu Start"><span></span><span></span><span></span><span></span></button>
+      <span class="task-divider"></span>
+      <div class="running-apps" id="runningApps"></div>
+      <div class="tray"><button id="showDesktop" title="Pokaż pulpit">⌄</button><span class="local-status"><i></i> lokalnie</span><div class="clock"><strong id="clockTime">--:--</strong><span id="clockDate">--.--.----</span></div></div>
+    </footer>
+  </main>
+  <script src="desktop.js"></script>
+</body>
+</html>

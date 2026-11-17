@@ -1,0 +1,12 @@
+name: pulpit
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pulpit-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${PULPIT_PORT:-8093}:80"
+

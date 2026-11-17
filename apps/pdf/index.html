@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#171717" />
+  <meta name="description" content="Prywatny edytor PDF działający w całości w przeglądarce." />
+  <title>PDF Studio — edytuj po swojemu</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="PDF Studio">
+        <span class="brand-mark">P</span>
+        <span>PDF Studio</span>
+      </a>
+      <div class="top-actions">
+        <span class="privacy-pill"><span class="privacy-dot"></span> Plik zostaje na Twoim urządzeniu</span>
+        <button class="button button-ghost" id="newFileBtn" type="button">Nowy plik</button>
+        <button class="button button-primary" id="exportBtn" type="button" disabled>
+          <span>Pobierz PDF</span><span aria-hidden="true">↗</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace empty" id="workspace">
+      <aside class="sidebar" aria-label="Strony dokumentu">
+        <div class="sidebar-head">
+          <span>STRONY</span><span class="page-count" id="pageCount">0</span>
+        </div>
+        <div class="thumbs" id="thumbs"></div>
+      </aside>
+
+      <section class="editor-area">
+        <div class="toolbar" id="toolbar" aria-label="Narzędzia edycji">
+          <div class="tool-group">
+            <button class="tool active" data-tool="select" title="Zaznacz (V)"><span class="tool-icon">↖</span><span>Zaznacz</span></button>
+            <button class="tool" data-tool="text" title="Dodaj tekst (T)"><span class="tool-icon text-icon">T</span><span>Tekst</span></button>
+            <button class="tool" data-tool="draw" title="Rysuj (D)"><span class="tool-icon">✎</span><span>Rysuj</span></button>
+            <button class="tool" data-tool="image" title="Dodaj zdjęcie (I)"><span class="tool-icon">▧</span><span>Zdjęcie</span></button>
+          </div>
+          <span class="divider"></span>
+          <div class="tool-group compact">
+            <label class="color-wrap" title="Kolor"><input type="color" id="colorPicker" value="#ef4f3f"><span id="colorSwatch"></span></label>
+            <label class="range-wrap" title="Grubość pędzla"><span>Grubość</span><input id="brushSize" type="range" min="1" max="36" value="5"><output id="brushOutput">5</output></label>
+          </div>
+          <span class="toolbar-spacer"></span>
+          <div class="tool-group compact">
+            <button class="icon-button" id="undoBtn" title="Cofnij" disabled>↶</button>
+            <button class="icon-button" id="redoBtn" title="Ponów" disabled>↷</button>
+            <button class="icon-button danger" id="deleteBtn" title="Usuń zaznaczenie" disabled>⌫</button>
+          </div>
+        </div>
+
+        <div class="selection-bar" id="selectionBar">
+          <span class="selection-label">ZAZNACZONY ELEMENT</span>
+          <button id="fitWidthBtn">Dopasuj do szerokości</button>
+          <button id="fitPageBtn">Dopasuj do strony</button>
+          <button id="rotateBtn">Obróć 90°</button>
+          <button id="duplicateBtn">Duplikuj</button>
+          <button id="backBtn">Przenieś w dół</button>
+          <button id="frontBtn">Przenieś na wierzch</button>
+        </div>
+
+        <div class="canvas-scroller" id="canvasScroller">
+          <div class="empty-state" id="emptyState">
+            <div class="upload-art" aria-hidden="true">
+              <div class="paper paper-back"></div><div class="paper paper-front"><span>PDF</span></div><div class="upload-arrow">↑</div>
+            </div>
+            <p class="eyebrow">TWÓJ DOKUMENT, TWOJE ZASADY</p>
+            <h1>Wrzuć PDF.<br><em>Zrób z nim, co chcesz.</em></h1>
+            <p class="lead">Pisz, rysuj, dodawaj zdjęcia i układaj wszystko dokładnie po swojemu. Bez konta i bez wysyłania pliku na serwer.</p>
+            <button class="upload-button" id="uploadBtn" type="button"><span>Wybierz plik PDF</span><span class="upload-button-icon">＋</span></button>
+            <p class="file-hint">PDF do 100 MB · przetwarzany lokalnie</p>
+          </div>
+          <div class="canvas-zone" id="canvasZone" hidden>
+            <div class="page-stage" id="pageStage">
+              <canvas id="pdfCanvas"></canvas>
+              <canvas id="editCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="statusbar" id="statusbar">
+          <div><span id="fileName">Brak pliku</span><span class="save-state">● Zmiany lokalne</span></div>
+          <div class="zoom-control"><button id="zoomOut">−</button><span id="zoomValue">100%</span><button id="zoomIn">＋</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <input type="file" id="pdfInput" accept="application/pdf" hidden />
+  <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" hidden />
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="busy" id="busy" hidden><div class="spinner"></div><strong id="busyText">Przetwarzam…</strong></div>
+
+  <script src="../../assets/vendor/pdf.min.js"></script>
+  <script src="../../assets/vendor/fabric.min.js"></script>
+  <script src="../../assets/vendor/pdf-lib.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
