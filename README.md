@@ -7,6 +7,7 @@ Strona główna stylizowana na pulpit systemu Windows. Każda tworzona aplikacja
 - pulpit, menu Start i pasek zadań,
 - okna z minimalizacją, maksymalizacją i przeciąganiem,
 - PDF Studio: tekst, rysowanie, obrazy, skalowanie i eksport PDF,
+- Notatnik: wiele notatek, wyszukiwanie, autozapis i eksport TXT,
 - dokumenty PDF są przetwarzane w przeglądarce,
 - wszystkie biblioteki są zapisane lokalnie w repozytorium,
 - gotowa konfiguracja Docker dla VPS.

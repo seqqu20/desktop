@@ -1,7 +1,8 @@
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const apps = {
-  pdf: { name: 'PDF Studio', icon: '<span class="mini-pdf">P</span>' }
+  pdf: { name: 'PDF Studio', icon: '<span class="mini-pdf">P</span>' },
+  notatnik: { name: 'Notatnik', icon: '<span class="mini-note">N</span>' }
 };
 let topZ = 20;
 const startMenu = $('#startMenu');

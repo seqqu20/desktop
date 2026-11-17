@@ -18,6 +18,10 @@
         <span class="app-icon pdf-icon"><span>PDF</span><i></i></span>
         <span>PDF Studio</span>
       </button>
+      <button class="desktop-icon" data-open="notatnik" type="button">
+        <span class="app-icon note-icon"><span class="note-glyph">≡</span></span>
+        <span>Notatnik</span>
+      </button>
     </section>
 
     <div class="window app-window" id="window-pdf" data-app="pdf" hidden>
@@ -33,12 +37,26 @@
       <div class="resize-handle"></div>
     </div>
 
+    <div class="window app-window notes-window" id="window-notatnik" data-app="notatnik" hidden>
+      <header class="window-titlebar">
+        <div class="window-title"><span class="mini-note">N</span><strong>Notatnik</strong><small>notatki zapisywane lokalnie</small></div>
+        <div class="window-controls">
+          <button data-action="minimize" aria-label="Minimalizuj">—</button>
+          <button data-action="maximize" aria-label="Maksymalizuj">□</button>
+          <button data-action="close" aria-label="Zamknij">×</button>
+        </div>
+      </header>
+      <div class="window-body"><iframe src="apps/notatnik/index.html" title="Notatnik" sandbox="allow-scripts allow-same-origin allow-downloads allow-modals"></iframe></div>
+      <div class="resize-handle"></div>
+    </div>
+
     <aside class="start-menu" id="startMenu" hidden>
       <div class="start-head"><div class="avatar">M</div><div><strong>Mój Pulpit</strong><span>lokalne środowisko</span></div></div>
       <label class="search"><span>⌕</span><input id="appSearch" type="search" placeholder="Szukaj aplikacji"></label>
       <div class="start-label">APLIKACJE</div>
       <button class="start-app" data-open="pdf"><span class="start-app-icon pdf-icon"><b>PDF</b></span><span><strong>PDF Studio</strong><small>Edytuj dokumenty</small></span><i>›</i></button>
-      <div class="start-footer"><span>Wszystko działa lokalnie</span><span>v0.1</span></div>
+      <button class="start-app" data-open="notatnik"><span class="start-app-icon note-icon"><b>≡</b></span><span><strong>Notatnik</strong><small>Pisz i zapisuj notatki</small></span><i>›</i></button>
+      <div class="start-footer"><span>Wszystko działa lokalnie</span><span>v0.2</span></div>
     </aside>
 
     <footer class="taskbar">

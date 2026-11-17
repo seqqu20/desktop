@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4f1e8">
+  <title>Notatnik</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="notepad">
+    <aside class="notes-panel">
+      <div class="panel-head">
+        <div><span class="eyebrow">MOJE</span><h1>Notatki</h1></div>
+        <button class="new-button" id="newNote" title="Nowa notatka" aria-label="Nowa notatka">＋</button>
+      </div>
+      <label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Szukaj w notatkach…"></label>
+      <div class="notes-list" id="notesList"></div>
+      <div class="panel-foot"><span id="noteCount">0 notatek</span><span class="local-dot">● lokalnie</span></div>
+    </aside>
+
+    <section class="editor-panel">
+      <div class="editor-toolbar">
+        <button id="exportNote" title="Pobierz jako TXT">Pobierz .txt</button>
+        <span class="toolbar-space"></span>
+        <label>Rozmiar <input id="fontSize" type="range" min="14" max="28" value="18"><output id="fontSizeValue">18</output></label>
+        <button class="delete-button" id="deleteNote" title="Usuń notatkę">Usuń</button>
+      </div>
+      <div class="paper-wrap">
+        <article class="paper">
+          <input class="note-title" id="noteTitle" maxlength="120" placeholder="Tytuł notatki">
+          <div class="date-row"><span id="noteDate">—</span><span id="saveState">Zapisano</span></div>
+          <textarea id="noteBody" spellcheck="true" placeholder="Zacznij pisać…"></textarea>
+        </article>
+      </div>
+      <footer class="statusbar"><span id="wordCount">0 słów</span><span id="charCount">0 znaków</span><span>Ctrl+S — zapisz</span></footer>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
