@@ -29,7 +29,7 @@ Projekt działa w osobnym katalogu `/opt/pulpit`, osobnym kontenerze `pulpit-web
 ```bash
 sudo mkdir -p /opt/pulpit
 sudo chown "$USER":"$USER" /opt/pulpit
-git clone https://github.com/seqqu20/pulpit.git /opt/pulpit
+git clone https://github.com/seqqu20/desktop.git /opt/pulpit
 cd /opt/pulpit
 docker compose up -d --build
 docker compose ps
