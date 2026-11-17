@@ -32,3 +32,43 @@ els.merge.addEventListener('click',async()=>{busy(true,'Łączę dokumenty PDF�
 
 $('#textInput').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;$('#textContent').value=await file.text();$('#documentTitle').value=file.name.replace(/\.[^.]+$/,'');});
 $('#textToPdf').addEventListener('click',async()=>{const text=$('#textContent').value,title=$('#documentTitle').value.trim()||'Dokument';if(!text.trim())return toast('Wpisz treść dokumentu');busy(true,'Tworzę dokument PDF…');try{const pdf=await PDFLib.PDFDocument.create();const W=1240,H=1754,M=105,fontSize=Number($('#textSize').value)*2,lineHeight=Math.round(fontSize*1.5);const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.font=`${fontSize}px Arial`;const maxWidth=W-M*2;const lines=[];for(const paragraph of text.replace(/\r/g,'').split('\n')){if(!paragraph){lines.push('');continue}let line='';for(const word of paragraph.split(/\s+/)){const test=line?`${line} ${word}`:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}lines.push(line)}let index=0,pageNumber=0;while(index<lines.length||pageNumber===0){ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#18201f';let y=M;if(pageNumber===0){ctx.font='bold 52px Arial';ctx.fillText(title,M,y);y+=85;ctx.strokeStyle='#d8dedc';ctx.beginPath();ctx.moveTo(M,y-28);ctx.lineTo(W-M,y-28);ctx.stroke()}ctx.font=`${fontSize}px Arial`;while(index<lines.length&&y<=H-M){ctx.fillText(lines[index],M,y);y+=lineHeight;index++}ctx.fillStyle='#8a9391';ctx.font='20px Arial';ctx.fillText(`${pageNumber+1}`,W-M-10,H-45);const png=await pdf.embedPng(canvas.toDataURL('image/png'));const page=pdf.addPage([595.28,841.89]);page.drawImage(png,{x:0,y:0,width:595.28,height:841.89});pageNumber++}const bytes=await pdf.save();download(new Blob([bytes],{type:'application/pdf'}),`${title}.pdf`);toast('Dokument PDF jest gotowy')}catch(e){console.error(e);toast('Nie udało się utworzyć PDF-a')}finally{busy(false)}});
+
+let ocrFile=null;
+setupDrop($('#ocrDrop'),$('#ocrInput'),files=>selectOcrFile(files[0]));
+function selectOcrFile(file){
+  if(!file)return;
+  if(!(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')))return toast('Wybierz plik PDF');
+  if(file.size>20*1024*1024)return toast('PDF może mieć maksymalnie 20 MB');
+  ocrFile=file;
+  $('#ocrSelected').hidden=false;
+  $('#ocrSelected').innerHTML=`<div class="file-row"><div class="file-type">PDF</div><div class="file-info"><strong>${file.name}</strong><span>${size(file.size)} · gotowy do OCR</span></div></div>`;
+  $('#ocrConvert').disabled=false;
+}
+async function ocrApi(path,options={}){
+  const response=await fetch(path,{credentials:'same-origin',...options});
+  if(response.ok)return response;
+  let message='Błąd konwersji';try{message=(await response.json()).error||message}catch{}
+  const error=new Error(message);error.status=response.status;throw error;
+}
+async function ensureOcrLogin(){
+  const session=await (await ocrApi('/api/session')).json();
+  if(session.authenticated){$('#ocrAuth').hidden=true;return true}
+  $('#ocrAuth').hidden=false;
+  const password=$('#ocrPassword').value;
+  if(!password){$('#ocrPassword').focus();$('#ocrAuthError').textContent='Wpisz hasło do prywatnych narzędzi.';return false}
+  try{await ocrApi('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});$('#ocrPassword').value='';$('#ocrAuth').hidden=true;$('#ocrAuthError').textContent='';return true}catch(error){$('#ocrAuthError').textContent=error.message;return false}
+}
+$('#ocrPassword').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('#ocrConvert').click()}});
+$('#ocrConvert').addEventListener('click',async()=>{
+  if(!ocrFile)return toast('Najpierw wybierz PDF');
+  try{
+    if(!await ensureOcrLogin())return;
+    busy(true,'OCR analizuje dokument… To może potrwać kilka minut.');
+    const response=await ocrApi('/api/ocr/pdf-to-word',{method:'POST',headers:{'Content-Type':'application/pdf','X-Filename':encodeURIComponent(ocrFile.name)},body:ocrFile});
+    const blob=await response.blob();
+    download(blob,`${ocrFile.name.replace(/\.pdf$/i,'')}-OCR.docx`);
+    toast('Dokument Word jest gotowy');
+  }catch(error){
+    console.error(error);if(error.status===401)$('#ocrAuth').hidden=false;toast(error.message);
+  }finally{busy(false)}
+});

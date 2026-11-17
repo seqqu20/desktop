@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#eef3f1">
   <title>Konwerter</title>
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
   <main class="converter">
@@ -18,6 +18,7 @@
       <button class="active" data-tab="images"><span>▧</span> Obrazy</button>
       <button data-tab="pdf"><span>PDF</span> Połącz PDF</button>
       <button data-tab="text"><span>¶</span> Tekst do PDF</button>
+      <button data-tab="ocr"><span>W</span> PDF do Word OCR</button>
     </nav>
 
     <section class="panel active" id="panel-images">
@@ -59,10 +60,30 @@
         <aside class="settings"><span class="section-label">DOKUMENT PDF</span><label>Rozmiar tekstu<select id="textSize"><option value="14">14 px</option><option value="16" selected>16 px</option><option value="18">18 px</option><option value="20">20 px</option></select></label><div class="info-box">Obsługiwane są polskie znaki, akapity i automatyczny podział na strony A4.</div><button class="primary" id="textToPdf">Utwórz PDF <span>→</span></button></aside>
       </div>
     </section>
+
+    <section class="panel" id="panel-ocr">
+      <div class="ocr-layout">
+        <div class="ocr-main">
+          <label class="dropzone ocr-drop" id="ocrDrop">
+            <input id="ocrInput" type="file" accept="application/pdf" hidden>
+            <span class="drop-icon word">W</span><strong>Wybierz PDF do rozpoznania</strong><small>Skan lub zwykły PDF · maks. 20 MB i 30 stron</small>
+          </label>
+          <div class="selected-ocr" id="ocrSelected" hidden></div>
+          <div class="ocr-features"><div><b>300 DPI</b><span>dokładne skany</span></div><div><b>PL + EN</b><span>dwa języki OCR</span></div><div><b>.DOCX</b><span>edytowalny wynik</span></div></div>
+        </div>
+        <aside class="settings ocr-settings">
+          <span class="section-label">PRYWATNE OCR</span>
+          <p>Dokument jest tymczasowo przetwarzany na Twoim VPS i usuwany zaraz po utworzeniu pliku Word.</p>
+          <div class="auth-box" id="ocrAuth" hidden><label>Hasło do Notatnika<input id="ocrPassword" type="password" autocomplete="current-password" placeholder="Wpisz hasło"></label><small id="ocrAuthError"></small></div>
+          <button class="primary" id="ocrConvert" disabled>Rozpoznaj i pobierz Word <span>→</span></button>
+          <div class="ocr-warning">Czas konwersji zależy od liczby stron i jakości skanu.</div>
+        </aside>
+      </div>
+    </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="busy" id="busy" hidden><div class="spinner"></div><strong id="busyText">Przetwarzam…</strong></div>
   <script src="../../assets/vendor/pdf-lib.min.js"></script>
-  <script src="app.js?v=1"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

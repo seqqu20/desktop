@@ -8,8 +8,8 @@ Strona główna stylizowana na pulpit systemu Windows. Każda tworzona aplikacja
 - okna z minimalizacją, maksymalizacją i przeciąganiem,
 - PDF Studio: tekst, rysowanie, obrazy, skalowanie i eksport PDF,
 - prywatny Notatnik w SQLite: logowanie, synchronizacja, autozapis i eksport TXT,
-- Konwerter: JPG/PNG/WebP, zmiana rozmiaru, łączenie PDF oraz TXT/Markdown do PDF,
-- dokumenty PDF są przetwarzane w przeglądarce,
+- Konwerter: JPG/PNG/WebP, łączenie PDF, TXT/Markdown do PDF oraz PDF do Word z OCR PL+EN,
+- edycja, łączenie i tworzenie PDF odbywa się w przeglądarce; tylko OCR działa na prywatnym VPS,
 - wszystkie biblioteki są zapisane lokalnie w repozytorium,
 - gotowa konfiguracja Docker dla VPS.
 
@@ -63,6 +63,14 @@ Reverse proxy na VPS powinno kierować wybraną domenę do `http://127.0.0.1:809
 
 ```bash
 PULPIT_PORT=8094 docker compose up -d --build
+```
+
+Dla OCR ustaw w sekcji `location /` konfiguracji Nginx limit i dłuższy czas oczekiwania:
+
+```nginx
+client_max_body_size 21M;
+proxy_read_timeout 300s;
+proxy_send_timeout 300s;
 ```
 
 Notatki są przechowywane w trwałym wolumenie Dockera `desktop-pulpit-notes`. Przebudowa kontenera nie usuwa bazy. Nie usuwaj tego wolumenu.
