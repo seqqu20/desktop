@@ -7,7 +7,7 @@ Strona główna stylizowana na pulpit systemu Windows. Każda tworzona aplikacja
 - pulpit, menu Start i pasek zadań,
 - okna z minimalizacją, maksymalizacją i przeciąganiem,
 - PDF Studio: tekst, rysowanie, obrazy, skalowanie i eksport PDF,
-- Notatnik: wiele notatek, wyszukiwanie, autozapis i eksport TXT,
+- prywatny Notatnik w SQLite: logowanie, synchronizacja, autozapis i eksport TXT,
 - dokumenty PDF są przetwarzane w przeglądarce,
 - wszystkie biblioteki są zapisane lokalnie w repozytorium,
 - gotowa konfiguracja Docker dla VPS.
@@ -32,6 +32,14 @@ sudo mkdir -p /opt/desktop-pulpit
 sudo chown "$USER":"$USER" /opt/desktop-pulpit
 git clone https://github.com/seqqu20/desktop.git /opt/desktop-pulpit
 cd /opt/desktop-pulpit
+
+read -rsp "Ustaw hasło do Notatnika: " NOTES_PASSWORD; echo
+NOTES_HASH=$(printf '%s' "$NOTES_PASSWORD" | sha256sum | awk '{print $1}')
+SESSION_SECRET=$(openssl rand -hex 32)
+printf 'PULPIT_PORT=8093\nNOTES_PASSWORD_SHA256=%s\nSESSION_SECRET=%s\nCOOKIE_SECURE=true\n' "$NOTES_HASH" "$SESSION_SECRET" > .env
+chmod 600 .env
+unset NOTES_PASSWORD NOTES_HASH SESSION_SECRET
+
 docker compose up -d --build
 docker compose ps
 curl -I http://127.0.0.1:8093
@@ -55,6 +63,8 @@ Reverse proxy na VPS powinno kierować wybraną domenę do `http://127.0.0.1:809
 ```bash
 PULPIT_PORT=8094 docker compose up -d --build
 ```
+
+Notatki są przechowywane w trwałym wolumenie Dockera `desktop-pulpit-notes`. Przebudowa kontenera nie usuwa bazy. Nie usuwaj tego wolumenu.
 
 ## Dodawanie aplikacji
 

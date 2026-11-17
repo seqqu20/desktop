@@ -7,6 +7,17 @@ services:
       dockerfile: Dockerfile
     container_name: desktop-pulpit-web
     restart: unless-stopped
+    environment:
+      NOTES_PASSWORD_SHA256: ${NOTES_PASSWORD_SHA256:?Ustaw NOTES_PASSWORD_SHA256 w pliku .env}
+      SESSION_SECRET: ${SESSION_SECRET:?Ustaw SESSION_SECRET w pliku .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      NOTES_DB: /data/notes.db
     ports:
-      - "127.0.0.1:${PULPIT_PORT:-8093}:80"
+      - "127.0.0.1:${PULPIT_PORT:-8093}:8080"
+    volumes:
+      - notes-data:/data
+
+volumes:
+  notes-data:
+    name: desktop-pulpit-notes
 

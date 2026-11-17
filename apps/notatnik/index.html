@@ -25,6 +25,7 @@
         <span class="toolbar-space"></span>
         <label>Rozmiar <input id="fontSize" type="range" min="14" max="28" value="18"><output id="fontSizeValue">18</output></label>
         <button class="delete-button" id="deleteNote" title="Usuń notatkę">Usuń</button>
+        <button id="logoutNote" title="Wyloguj z bazy notatek">Wyloguj</button>
       </div>
       <div class="paper-wrap">
         <article class="paper">
@@ -37,6 +38,17 @@
     </section>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="login-screen" id="loginScreen">
+    <form class="login-card" id="loginForm">
+      <div class="login-icon">N</div>
+      <span class="eyebrow">PRYWATNA BAZA</span>
+      <h2>Zaloguj się do Notatnika</h2>
+      <p>Notatki są przesyłane przez HTTPS i zapisywane w bazie SQLite na Twoim VPS.</p>
+      <label>Hasło<input id="password" type="password" autocomplete="current-password" required autofocus></label>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit">Otwórz notatki</button>
+    </form>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
