@@ -8,6 +8,7 @@ Strona główna stylizowana na pulpit systemu Windows. Każda tworzona aplikacja
 - okna z minimalizacją, maksymalizacją i przeciąganiem,
 - PDF Studio: tekst, rysowanie, obrazy, skalowanie i eksport PDF,
 - prywatny Notatnik w SQLite: logowanie, synchronizacja, autozapis i eksport TXT,
+- Konwerter: JPG/PNG/WebP, zmiana rozmiaru, łączenie PDF oraz TXT/Markdown do PDF,
 - dokumenty PDF są przetwarzane w przeglądarce,
 - wszystkie biblioteki są zapisane lokalnie w repozytorium,
 - gotowa konfiguracja Docker dla VPS.

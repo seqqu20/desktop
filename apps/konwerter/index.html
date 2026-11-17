@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eef3f1">
+  <title>Konwerter</title>
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <main class="converter">
+    <header class="hero">
+      <div><span class="eyebrow">LOKALNE NARZĘDZIA</span><h1>Konwerter plików</h1><p>Pliki nie opuszczają Twojej przeglądarki.</p></div>
+      <div class="privacy"><i></i> Bez wysyłania na serwer</div>
+    </header>
+
+    <nav class="tabs" aria-label="Rodzaj konwersji">
+      <button class="active" data-tab="images"><span>▧</span> Obrazy</button>
+      <button data-tab="pdf"><span>PDF</span> Połącz PDF</button>
+      <button data-tab="text"><span>¶</span> Tekst do PDF</button>
+    </nav>
+
+    <section class="panel active" id="panel-images">
+      <div class="panel-grid">
+        <div class="upload-column">
+          <label class="dropzone" id="imageDrop">
+            <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+            <span class="drop-icon">＋</span><strong>Dodaj obrazy</strong><small>JPG, PNG lub WebP · możesz wybrać wiele</small>
+          </label>
+          <div class="file-list" id="imageList"><div class="empty">Nie wybrano jeszcze obrazów.</div></div>
+        </div>
+        <aside class="settings">
+          <span class="section-label">USTAWIENIA WYNIKU</span>
+          <label>Format<select id="imageFormat"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select></label>
+          <label>Maksymalna szerokość<select id="maxWidth"><option value="0">Oryginalna</option><option value="3840">3840 px</option><option value="2560">2560 px</option><option value="1920" selected>1920 px</option><option value="1280">1280 px</option><option value="800">800 px</option></select></label>
+          <label class="quality-row">Jakość <span id="qualityValue">85%</span><input id="quality" type="range" min="20" max="100" value="85"></label>
+          <button class="primary" id="convertImages" disabled>Konwertuj obrazy <span>→</span></button>
+          <button class="secondary" id="downloadAll" hidden>Pobierz wszystkie</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-pdf">
+      <div class="pdf-layout">
+        <div>
+          <label class="dropzone compact" id="pdfDrop"><input id="pdfInput" type="file" accept="application/pdf" multiple hidden><span class="drop-icon pdf">PDF</span><strong>Dodaj pliki PDF</strong><small>Kolejność możesz zmienić przed połączeniem</small></label>
+          <div class="sortable-list" id="pdfList"><div class="empty">Dodaj co najmniej dwa pliki PDF.</div></div>
+        </div>
+        <aside class="settings summary"><span class="section-label">PODSUMOWANIE</span><div class="metric"><strong id="pdfCount">0</strong><span>plików PDF</span></div><p>Wszystkie strony zostaną połączone zgodnie z kolejnością na liście.</p><button class="primary" id="mergePdfs" disabled>Połącz i pobierz <span>→</span></button></aside>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-text">
+      <div class="text-layout">
+        <div class="document-editor">
+          <div class="document-head"><input id="documentTitle" placeholder="Tytuł dokumentu" value="Mój dokument"><label class="file-button">Wczytaj TXT / MD<input id="textInput" type="file" accept=".txt,.md,text/plain,text/markdown" hidden></label></div>
+          <textarea id="textContent" placeholder="Wpisz lub wklej tekst…">Wpisz tutaj treść dokumentu.\n\nKonwerter utworzy czytelny plik PDF w formacie A4.</textarea>
+        </div>
+        <aside class="settings"><span class="section-label">DOKUMENT PDF</span><label>Rozmiar tekstu<select id="textSize"><option value="14">14 px</option><option value="16" selected>16 px</option><option value="18">18 px</option><option value="20">20 px</option></select></label><div class="info-box">Obsługiwane są polskie znaki, akapity i automatyczny podział na strony A4.</div><button class="primary" id="textToPdf">Utwórz PDF <span>→</span></button></aside>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="busy" id="busy" hidden><div class="spinner"></div><strong id="busyText">Przetwarzam…</strong></div>
+  <script src="../../assets/vendor/pdf-lib.min.js"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
