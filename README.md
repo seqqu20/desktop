@@ -24,13 +24,13 @@ chmod +x START-MAC-LINUX.command
 
 ## VPS — pierwsze wdrożenie
 
-Projekt działa w osobnym katalogu `/opt/pulpit`, osobnym kontenerze `pulpit-web` i domyślnie tylko na lokalnym porcie `8093`. Nie usuwa ani nie zatrzymuje innych projektów.
+Projekt działa w osobnym katalogu `/opt/desktop-pulpit`, osobnym kontenerze `desktop-pulpit-web` i domyślnie tylko na lokalnym porcie `8093`. Nie usuwa ani nie zatrzymuje innych projektów.
 
 ```bash
-sudo mkdir -p /opt/pulpit
-sudo chown "$USER":"$USER" /opt/pulpit
-git clone https://github.com/seqqu20/desktop.git /opt/pulpit
-cd /opt/pulpit
+sudo mkdir -p /opt/desktop-pulpit
+sudo chown "$USER":"$USER" /opt/desktop-pulpit
+git clone https://github.com/seqqu20/desktop.git /opt/desktop-pulpit
+cd /opt/desktop-pulpit
 docker compose up -d --build
 docker compose ps
 curl -I http://127.0.0.1:8093
@@ -39,7 +39,7 @@ curl -I http://127.0.0.1:8093
 ## VPS — aktualizacja
 
 ```bash
-cd /opt/pulpit
+cd /opt/desktop-pulpit
 git pull --ff-only
 docker compose up -d --build
 docker compose ps
