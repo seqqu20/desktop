@@ -3,7 +3,8 @@ const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const apps = {
   pdf: { name: 'PDF Studio', icon: '<span class="mini-pdf">P</span>' },
   notatnik: { name: 'Notatnik', icon: '<span class="mini-note">N</span>' },
-  konwerter: { name: 'Konwerter', icon: '<span class="mini-convert">⇄</span>' }
+  konwerter: { name: 'Konwerter', icon: '<span class="mini-convert">⇄</span>' },
+  skaner: { name: 'Skaner', icon: '<span class="mini-scanner">⌗</span>' }
 };
 let topZ = 20;
 const startMenu = $('#startMenu');

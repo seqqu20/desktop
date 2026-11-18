@@ -30,6 +30,7 @@ SESSION_AGE = 60 * 60 * 24 * 30
 MAX_BODY = 2 * 1024 * 1024
 MAX_OCR_BODY = 20 * 1024 * 1024
 MAX_OCR_PAGES = 30
+MAX_SCAN_IMAGE_BODY = 15 * 1024 * 1024
 NOTE_PATH = re.compile(r"^/api/notes/([a-zA-Z0-9-]+)$")
 LOGIN_ATTEMPTS = defaultdict(deque)
 LOGIN_LOCK = threading.Lock()
@@ -287,12 +288,14 @@ class AppHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
-    def send_binary(self, status, payload, content_type, filename):
+    def send_binary(self, status, payload, content_type, filename, extra_headers=None):
         safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "-", filename).strip("-") or "document.docx"
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(payload)))
         self.send_header("Content-Disposition", f'attachment; filename="{safe_name}"')
+        for name, value in (extra_headers or {}).items():
+            self.send_header(name, value)
         self.end_headers()
         self.wfile.write(payload)
 
@@ -355,6 +358,14 @@ class AppHandler(SimpleHTTPRequestHandler):
             if not self.require_auth():
                 return
             return self.handle_pdf_to_word()
+        if path == "/api/scanner/process":
+            if not self.require_auth():
+                return
+            return self.handle_scan_image()
+        if path == "/api/scanner/ocr-pdf":
+            if not self.require_auth():
+                return
+            return self.handle_scanner_ocr_pdf()
         if path == "/api/notes":
             if not self.require_auth():
                 return
@@ -370,6 +381,126 @@ class AppHandler(SimpleHTTPRequestHandler):
                 db.execute("INSERT INTO notes(id, title, body, created_at, updated_at) VALUES(?,?,?,?,?)", (note_id, title, body, timestamp, timestamp))
             return self.send_json(201, {"note": {"id": note_id, "title": title, "body": body, "created_at": timestamp, "updated_at": timestamp}})
         return self.send_json(404, {"error": "Nie znaleziono"})
+
+    def read_binary(self, maximum, label):
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            raise ValueError(f"Nieprawidłowy rozmiar {label}")
+        if length < 1 or length > maximum:
+            raise ValueError(f"{label} jest za duży")
+        return self.rfile.read(length)
+
+    def handle_scan_image(self):
+        try:
+            content = self.read_binary(MAX_SCAN_IMAGE_BODY, "Obraz")
+            import cv2
+            import numpy as np
+            raster = cv2.imdecode(np.frombuffer(content, dtype=np.uint8), cv2.IMREAD_COLOR)
+            if raster is None:
+                return self.send_json(415, {"error": "Nie udało się odczytać zdjęcia"})
+            height, width = raster.shape[:2]
+            if height * width > 50_000_000:
+                return self.send_json(413, {"error": "Zdjęcie ma zbyt wysoką rozdzielczość"})
+            crop_detected = False
+            if self.headers.get("X-Auto-Crop", "true").lower() == "true":
+                scale = min(1.0, 1400 / max(height, width))
+                preview = cv2.resize(raster, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale < 1 else raster.copy()
+                gray = cv2.cvtColor(preview, cv2.COLOR_BGR2GRAY)
+                gray = cv2.GaussianBlur(gray, (5, 5), 0)
+                edges = cv2.Canny(gray, 45, 140)
+                edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8), iterations=2)
+                contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+                document = None
+                for contour in sorted(contours, key=cv2.contourArea, reverse=True)[:12]:
+                    perimeter = cv2.arcLength(contour, True)
+                    polygon = cv2.approxPolyDP(contour, 0.025 * perimeter, True)
+                    if len(polygon) == 4 and cv2.contourArea(polygon) > preview.shape[0] * preview.shape[1] * 0.18:
+                        document = polygon.reshape(4, 2).astype("float32") / scale
+                        break
+                if document is not None:
+                    sums = document.sum(axis=1)
+                    diffs = np.diff(document, axis=1).reshape(-1)
+                    points = np.array([document[np.argmin(sums)], document[np.argmin(diffs)], document[np.argmax(sums)], document[np.argmax(diffs)]], dtype="float32")
+                    top_left, top_right, bottom_right, bottom_left = points
+                    target_width = int(max(np.linalg.norm(bottom_right - bottom_left), np.linalg.norm(top_right - top_left)))
+                    target_height = int(max(np.linalg.norm(top_right - bottom_right), np.linalg.norm(top_left - bottom_left)))
+                    if target_width > 200 and target_height > 200:
+                        target = np.array([[0, 0], [target_width - 1, 0], [target_width - 1, target_height - 1], [0, target_height - 1]], dtype="float32")
+                        raster = cv2.warpPerspective(raster, cv2.getPerspectiveTransform(points, target), (target_width, target_height), borderMode=cv2.BORDER_REPLICATE)
+                        crop_detected = True
+            rotation = int(self.headers.get("X-Rotate", "0")) % 360
+            if rotation == 90:
+                raster = cv2.rotate(raster, cv2.ROTATE_90_CLOCKWISE)
+            elif rotation == 180:
+                raster = cv2.rotate(raster, cv2.ROTATE_180)
+            elif rotation == 270:
+                raster = cv2.rotate(raster, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            mode = self.headers.get("X-Scan-Mode", "color").lower()
+            if mode == "gray":
+                gray = cv2.cvtColor(raster, cv2.COLOR_BGR2GRAY)
+                raster = cv2.cvtColor(cv2.createCLAHE(2.0, (8, 8)).apply(gray), cv2.COLOR_GRAY2BGR)
+            elif mode == "bw":
+                gray = cv2.cvtColor(raster, cv2.COLOR_BGR2GRAY)
+                gray = cv2.GaussianBlur(gray, (3, 3), 0)
+                raster = cv2.cvtColor(cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 12), cv2.COLOR_GRAY2BGR)
+            else:
+                lab = cv2.cvtColor(raster, cv2.COLOR_BGR2LAB)
+                light, channel_a, channel_b = cv2.split(lab)
+                light = cv2.createCLAHE(1.6, (8, 8)).apply(light)
+                raster = cv2.cvtColor(cv2.merge((light, channel_a, channel_b)), cv2.COLOR_LAB2BGR)
+            height, width = raster.shape[:2]
+            if max(height, width) > 2800:
+                scale = 2800 / max(height, width)
+                raster = cv2.resize(raster, (round(width * scale), round(height * scale)), interpolation=cv2.INTER_AREA)
+            success, encoded = cv2.imencode(".jpg", raster, [cv2.IMWRITE_JPEG_QUALITY, 93])
+            if not success:
+                raise ValueError("Nie udało się zapisać zdjęcia")
+            return self.send_binary(200, encoded.tobytes(), "image/jpeg", "scan.jpg", {"X-Crop-Detected": "true" if crop_detected else "false"})
+        except ValueError as error:
+            return self.send_json(400, {"error": str(error)})
+        except Exception as error:
+            print("Błąd skanera:", repr(error))
+            return self.send_json(500, {"error": "Nie udało się przetworzyć zdjęcia"})
+
+    def handle_scanner_ocr_pdf(self):
+        try:
+            content = self.read_binary(MAX_OCR_BODY, "PDF")
+        except ValueError as error:
+            return self.send_json(413, {"error": str(error)})
+        if not content.startswith(b"%PDF-"):
+            return self.send_json(415, {"error": "Wybrany plik nie jest prawidłowym PDF-em"})
+        if not OCR_LOCK.acquire(blocking=False):
+            return self.send_json(429, {"error": "Trwa inne zadanie OCR. Spróbuj ponownie za chwilę."})
+        try:
+            with tempfile.TemporaryDirectory(prefix="pulpit-scan-ocr-") as temp:
+                temp_path = Path(temp)
+                input_path = temp_path / "scan.pdf"
+                input_path.write_bytes(content)
+                pages = pdf_page_count(input_path)
+                if pages < 1 or pages > MAX_OCR_PAGES:
+                    return self.send_json(422, {"error": f"PDF może mieć maksymalnie {MAX_OCR_PAGES} stron"})
+                prefix = temp_path / "page"
+                run_command(["pdftoppm", "-jpeg", "-r", "300", "-jpegopt", "quality=94", str(input_path), str(prefix)], timeout=360)
+                images = sorted(temp_path.glob("page-*.jpg"), key=lambda path: int(re.search(r"(\d+)$", path.stem).group(1)))
+                page_pdfs = []
+                for index, image in enumerate(images, 1):
+                    output_base = temp_path / f"ocr-page-{index}"
+                    run_command(["tesseract", str(image), str(output_base), "-l", "pol+eng", "--dpi", "300", "--psm", "3", "pdf"], timeout=240)
+                    page_pdfs.append(str(output_base.with_suffix(".pdf")))
+                if not page_pdfs:
+                    raise subprocess.CalledProcessError(1, "pdftoppm")
+                output_path = temp_path / "document-ocr.pdf"
+                run_command(["pdfunite", *page_pdfs, str(output_path)], timeout=120)
+                payload = output_path.read_bytes()
+            return self.send_binary(200, payload, "application/pdf", "skan-OCR.pdf")
+        except subprocess.TimeoutExpired:
+            return self.send_json(504, {"error": "OCR trwał zbyt długo"})
+        except Exception as error:
+            print("Błąd OCR skanera:", repr(error))
+            return self.send_json(500, {"error": "Nie udało się utworzyć PDF-u OCR"})
+        finally:
+            OCR_LOCK.release()
 
     def handle_pdf_to_word(self):
         try:

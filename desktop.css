@@ -13,3 +13,8 @@
 .mini-convert{width:23px;height:23px;display:grid;place-items:center;background:linear-gradient(145deg,#63d7c6,#238f91);color:#fff;border-radius:7px 4px 7px 4px;font-size:14px;font-weight:800}
 .converter-window{left:11%;top:8%;width:78%;height:81%}
 .task-app .mini-convert{width:23px;height:23px}
+.scanner-icon{background:linear-gradient(145deg,#39c798,#126953);border-radius:7px 14px 7px 14px;color:#fff;box-shadow:inset 0 1px rgba(255,255,255,.45)}
+.scanner-icon:before,.scanner-icon:after{content:"";position:absolute;width:10px;height:10px;border-color:rgba(255,255,255,.82);border-style:solid}.scanner-icon:before{left:8px;top:8px;border-width:2px 0 0 2px}.scanner-icon:after{right:8px;bottom:8px;border-width:0 2px 2px 0}.scanner-icon span,.scanner-icon b{font-size:21px!important;font-weight:500}
+.mini-scanner{width:23px;height:23px;display:grid;place-items:center;background:linear-gradient(145deg,#39c798,#126953);color:#fff;border-radius:5px 8px 5px 8px;font-size:14px;font-weight:800}
+.scanner-window{left:7%;top:6%;width:86%;height:85%}
+.task-app .mini-scanner{width:23px;height:23px}

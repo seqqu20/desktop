@@ -9,6 +9,7 @@ Strona główna stylizowana na pulpit systemu Windows. Każda tworzona aplikacja
 - PDF Studio: tekst, rysowanie, obrazy, skalowanie i eksport PDF,
 - prywatny Notatnik w SQLite: logowanie, synchronizacja, autozapis i eksport TXT,
 - Konwerter: JPG/PNG/WebP, łączenie PDF, TXT/Markdown do PDF oraz PDF do Word z OCR PL+EN w trybie tekstowym lub z zachowaniem układu,
+- Skaner dokumentów: zdjęcia z telefonu lub komputera, automatyczne prostowanie perspektywy, filtry, wielostronicowy PDF i OCR PL+EN,
 - edycja, łączenie i tworzenie PDF odbywa się w przeglądarce; tylko OCR działa na prywatnym VPS,
 - wszystkie biblioteki są zapisane lokalnie w repozytorium,
 - gotowa konfiguracja Docker dla VPS.

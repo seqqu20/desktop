@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#111722">
   <meta name="description" content="Mój Pulpit — prywatne środowisko dla własnych aplikacji.">
   <title>Mój Pulpit</title>
-  <link rel="stylesheet" href="desktop.css?v=8">
+  <link rel="stylesheet" href="desktop.css?v=9">
 </head>
 <body>
   <main class="desktop" id="desktop" aria-label="Mój Pulpit">
@@ -25,6 +25,10 @@
       <button class="desktop-icon" data-open="konwerter" type="button">
         <span class="app-icon convert-icon"><span>⇄</span></span>
         <span>Konwerter</span>
+      </button>
+      <button class="desktop-icon" data-open="skaner" type="button">
+        <span class="app-icon scanner-icon"><span>⌗</span></span>
+        <span>Skaner</span>
       </button>
     </section>
 
@@ -67,6 +71,19 @@
       <div class="resize-handle"></div>
     </div>
 
+    <div class="window app-window scanner-window" id="window-skaner" data-app="skaner" hidden>
+      <header class="window-titlebar">
+        <div class="window-title"><span class="mini-scanner">⌗</span><strong>Skaner dokumentów</strong><small>prostowanie zdjęć, OCR i PDF</small></div>
+        <div class="window-controls">
+          <button data-action="minimize" aria-label="Minimalizuj">—</button>
+          <button data-action="maximize" aria-label="Maksymalizuj">□</button>
+          <button data-action="close" aria-label="Zamknij">×</button>
+        </div>
+      </header>
+      <div class="window-body"><iframe src="apps/skaner/index.html?v=1" title="Skaner dokumentów" sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals"></iframe></div>
+      <div class="resize-handle"></div>
+    </div>
+
     <aside class="start-menu" id="startMenu" hidden>
       <div class="start-head"><div class="avatar">M</div><div><strong>Mój Pulpit</strong><span>lokalne środowisko</span></div></div>
       <label class="search"><span>⌕</span><input id="appSearch" type="search" placeholder="Szukaj aplikacji"></label>
@@ -74,7 +91,8 @@
       <button class="start-app" data-open="pdf"><span class="start-app-icon pdf-icon"><b>PDF</b></span><span><strong>PDF Studio</strong><small>Edytuj dokumenty</small></span><i>›</i></button>
       <button class="start-app" data-open="notatnik"><span class="start-app-icon note-icon"><b>≡</b></span><span><strong>Notatnik</strong><small>Pisz i zapisuj notatki</small></span><i>›</i></button>
       <button class="start-app" data-open="konwerter"><span class="start-app-icon convert-icon"><b>⇄</b></span><span><strong>Konwerter</strong><small>Obrazy, PDF i tekst</small></span><i>›</i></button>
-      <div class="start-footer"><span>Wszystko działa lokalnie</span><span>v0.3</span></div>
+      <button class="start-app" data-open="skaner"><span class="start-app-icon scanner-icon"><b>⌗</b></span><span><strong>Skaner dokumentów</strong><small>Zdjęcia, OCR i PDF</small></span><i>›</i></button>
+      <div class="start-footer"><span>Wszystko działa lokalnie</span><span>v0.4</span></div>
     </aside>
 
     <footer class="taskbar">
@@ -84,6 +102,6 @@
       <div class="tray"><button id="showDesktop" title="Pokaż pulpit">⌄</button><span class="local-status"><i></i> lokalnie</span><div class="clock"><strong id="clockTime">--:--</strong><span id="clockDate">--.--.----</span></div></div>
     </footer>
   </main>
-  <script src="desktop.js?v=8"></script>
+  <script src="desktop.js?v=9"></script>
 </body>
 </html>

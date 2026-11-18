@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#edf2ef">
+  <title>Skaner dokumentów</title>
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <main class="scanner">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">⌗</span><div><strong>Skaner dokumentów</strong><small>zdjęcia → poprawiony PDF z OCR</small></div></div>
+      <div class="top-actions">
+        <label class="button secondary">＋ Dodaj zdjęcia<input id="fileInput" type="file" accept="image/*" multiple hidden></label>
+        <label class="button camera">◎ Zrób zdjęcie<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden></label>
+        <button class="button primary" id="exportButton" disabled>Eksportuj PDF</button>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="pages-panel">
+        <div class="panel-title"><span>STRONY</span><b id="pageCount">0</b></div>
+        <div class="pages" id="pages"></div>
+        <label class="add-page">＋ Dodaj kolejną stronę<input type="file" accept="image/*" multiple hidden id="moreInput"></label>
+      </aside>
+
+      <section class="preview-area" id="dropArea">
+        <div class="empty" id="emptyState">
+          <span class="empty-icon">⌗</span>
+          <h1>Zeskanuj dokument</h1>
+          <p>Dodaj zdjęcia dokumentu. Automatycznie wykryjemy kartkę, wyprostujemy perspektywę i poprawimy czytelność.</p>
+          <label class="button primary large">Wybierz zdjęcia<input type="file" accept="image/*" multiple hidden id="emptyInput"></label>
+          <small>JPG, PNG, WebP · maks. 15 MB na zdjęcie</small>
+        </div>
+        <div class="paper-wrap" id="paperWrap" hidden><img id="preview" alt="Podgląd zeskanowanej strony"><div class="page-badge" id="pageBadge"></div></div>
+        <div class="drop-hint" id="dropHint">Upuść zdjęcia tutaj</div>
+      </section>
+
+      <aside class="settings-panel">
+        <span class="eyebrow">USTAWIENIA SKANU</span>
+        <label>Wygląd dokumentu<select id="scanMode"><option value="color">Ulepszony kolor</option><option value="gray">Skala szarości</option><option value="bw">Czarno-biały</option></select></label>
+        <label class="check"><input id="autoCrop" type="checkbox" checked><span><b>Automatycznie prostuj</b><small>Wykrywanie krawędzi kartki i korekcja perspektywy</small></span></label>
+        <button class="apply" id="applyAll" disabled>Zastosuj do wszystkich stron</button>
+        <div class="divider"></div>
+        <span class="eyebrow">EKSPORT PDF</span>
+        <label>Nazwa pliku<input id="documentName" value="Zeskanowany dokument" maxlength="80"></label>
+        <label class="check"><input id="ocrEnabled" type="checkbox" checked><span><b>OCR polski + angielski</b><small>Tekst będzie można wyszukiwać i kopiować z PDF-u</small></span></label>
+        <div class="privacy"><i></i><span>Pliki są przetwarzane na Twoim VPS i usuwane po zakończeniu.</span></div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="busy" id="busy" hidden><div class="spinner"></div><strong id="busyTitle">Przetwarzam…</strong><span id="busyDetail"></span></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal" id="authModal" hidden><form id="authForm" class="auth-card"><span class="auth-icon">⌗</span><small>PRYWATNE NARZĘDZIE</small><h2>Odblokuj Skaner</h2><p>Użyj tego samego hasła co w Notatniku i Konwerterze OCR.</p><label>Hasło<input id="password" type="password" autocomplete="current-password" required></label><div class="auth-error" id="authError"></div><button class="button primary" type="submit">Otwórz Skaner</button><button class="cancel" id="authCancel" type="button">Anuluj</button></form></div>
+  <script src="../../assets/vendor/pdf-lib.min.js"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
