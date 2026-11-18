@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import hashlib
 import hmac
+import csv
 import json
 import os
 import re
@@ -108,6 +109,103 @@ def ocr_pdf(input_path, temp_path, pages):
         ], timeout=180)
         page_texts.append(output_base.with_suffix(".txt").read_text("utf-8", errors="replace").strip())
     return page_texts
+
+
+def has_native_text(input_path, temp_path):
+    output_path = temp_path / "layout-native.txt"
+    run_command(["pdftotext", "-enc", "UTF-8", str(input_path), str(output_path)], timeout=90)
+    return len(re.sub(r"\s+", "", output_path.read_text("utf-8", errors="replace"))) >= 12
+
+
+def build_scanned_layout_docx(page_data, output_path):
+    document_parts = []
+    document_relationships = []
+    for page_index, (image_path, lines, width_px, height_px) in enumerate(page_data, 1):
+        width_pt = width_px * 72 / 300
+        height_pt = height_px * 72 / 300
+        shapes = [f'''<w:r><w:pict><v:rect id="page-bg-{page_index}" stroked="f" style="position:absolute;left:0pt;top:0pt;width:{width_pt:.2f}pt;height:{height_pt:.2f}pt;z-index:-251658240;mso-position-horizontal-relative:page;mso-position-vertical-relative:page"><v:imagedata r:id="rId{page_index}" o:title=""/></v:rect></w:pict></w:r>''']
+        for line_index, line in enumerate(lines, 1):
+            left, top, right, bottom = line["bbox"]
+            x = max(0, left - 2) * 72 / 300
+            y = max(0, top - 2) * 72 / 300
+            width = max(8, right - left + 5) * 72 / 300
+            height = max(10, bottom - top + 5) * 72 / 300
+            font_half_points = max(14, min(72, round((bottom - top) * 72 / 300 * 1.7)))
+            text = escape(line["text"])
+            background = line["background"]
+            shapes.append(f'''<w:r><w:pict><v:rect id="ocr-{page_index}-{line_index}" stroked="f" fillcolor="{background}" style="position:absolute;left:{x:.2f}pt;top:{y:.2f}pt;width:{width:.2f}pt;height:{height:.2f}pt;z-index:{line_index};mso-position-horizontal-relative:page;mso-position-vertical-relative:page"><v:textbox inset="0,0,0,0"><w:txbxContent><w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="{font_half_points}"/><w:szCs w:val="{font_half_points}"/></w:rPr><w:t xml:space="preserve">{text}</w:t></w:r></w:p></w:txbxContent></v:textbox></v:rect></w:pict></w:r>''')
+        page_break = '<w:pageBreakBefore/>' if page_index > 1 else ''
+        document_parts.append(f'<w:p><w:pPr>{page_break}<w:spacing w:before="0" w:after="0"/></w:pPr>{"".join(shapes)}</w:p>')
+        document_relationships.append(f'<Relationship Id="rId{page_index}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/page-{page_index}.jpg"/>')
+    width_twips = round(page_data[0][2] * 72 / 300 * 20)
+    height_twips = round(page_data[0][3] * 72 / 300 * 20)
+    document_xml = f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><w:body>{''.join(document_parts)}<w:sectPr><w:pgSz w:w="{width_twips}" w:h="{height_twips}"/><w:pgMar w:top="0" w:right="0" w:bottom="0" w:left="0" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>'''
+    content_types = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'''
+    root_relationships = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'''
+    word_relationships = f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{''.join(document_relationships)}</Relationships>'''
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", root_relationships)
+        archive.writestr("word/document.xml", document_xml)
+        archive.writestr("word/_rels/document.xml.rels", word_relationships)
+        for page_index, (image_path, *_rest) in enumerate(page_data, 1):
+            archive.write(image_path, f"word/media/page-{page_index}.jpg")
+
+
+def build_layout_docx(input_path, temp_path, output_path, pages):
+    if not has_native_text(input_path, temp_path):
+        image_prefix = temp_path / "layout-page"
+        run_command([
+            "pdftoppm", "-jpeg", "-r", "300", "-jpegopt", "quality=94",
+            "-f", "1", "-l", str(pages), str(input_path), str(image_prefix)
+        ], timeout=360)
+        images = sorted(temp_path.glob("layout-page-*.jpg"), key=lambda path: int(re.search(r"(\d+)$", path.stem).group(1)))
+        page_data = []
+        import cv2
+        for index, image in enumerate(images, 1):
+            output_base = temp_path / f"layout-ocr-{index}"
+            run_command([
+                "tesseract", str(image), str(output_base), "-l", "pol+eng",
+                "--dpi", "300", "--psm", "3", "tsv"
+            ], timeout=240)
+            raster = cv2.imread(str(image))
+            height_px, width_px = raster.shape[:2]
+            grouped = {}
+            with output_base.with_suffix(".tsv").open("r", encoding="utf-8", errors="replace") as stream:
+                for row in csv.DictReader(stream, delimiter="\t"):
+                    if row.get("level") != "5" or not row.get("text", "").strip():
+                        continue
+                    key = (row["block_num"], row["par_num"], row["line_num"])
+                    left, top, width, height = (int(row[name]) for name in ("left", "top", "width", "height"))
+                    item = grouped.setdefault(key, {"words": [], "bbox": [left, top, left + width, top + height]})
+                    item["words"].append(row["text"].strip())
+                    item["bbox"] = [min(item["bbox"][0], left), min(item["bbox"][1], top), max(item["bbox"][2], left + width), max(item["bbox"][3], top + height)]
+            lines = []
+            for item in grouped.values():
+                left, top, right, bottom = item["bbox"]
+                sample = raster[max(0, top - 4):min(height_px, bottom + 4), max(0, left - 4):min(width_px, right + 4)]
+                if sample.size:
+                    pixels = sample.reshape(-1, 3)
+                    bright = pixels[pixels.mean(axis=1) > 150]
+                    color = (bright if len(bright) else pixels).mean(axis=0)
+                    background = f"#{round(color[2]):02x}{round(color[1]):02x}{round(color[0]):02x}"
+                else:
+                    background = "#ffffff"
+                lines.append({"text": " ".join(item["words"]), "bbox": item["bbox"], "background": background})
+            page_data.append((image, lines, width_px, height_px))
+        if not page_data:
+            raise subprocess.CalledProcessError(1, "pdftoppm")
+        return build_scanned_layout_docx(page_data, output_path)
+    from pdf2docx import Converter
+    converter = Converter(str(input_path))
+    try:
+        converter.convert(str(output_path), start=0, end=None)
+    finally:
+        converter.close()
 
 
 def build_docx(page_texts, output_path, title):
@@ -287,7 +385,9 @@ class AppHandler(SimpleHTTPRequestHandler):
             if not content.startswith(b"%PDF-"):
                 return self.send_json(415, {"error": "Wybrany plik nie jest prawidłowym PDF-em"})
             original_name = unquote(self.headers.get("X-Filename", "document.pdf"))
-            output_name = f"{Path(original_name).stem or 'document'}-OCR.docx"
+            layout_mode = self.headers.get("X-OCR-Mode", "text").lower() == "layout"
+            suffix = "uklad-OCR" if layout_mode else "OCR"
+            output_name = f"{Path(original_name).stem or 'document'}-{suffix}.docx"
             with tempfile.TemporaryDirectory(prefix="pulpit-ocr-") as temp:
                 temp_path = Path(temp)
                 input_path = temp_path / "input.pdf"
@@ -295,11 +395,14 @@ class AppHandler(SimpleHTTPRequestHandler):
                 pages = pdf_page_count(input_path)
                 if pages < 1 or pages > MAX_OCR_PAGES:
                     return self.send_json(422, {"error": f"PDF może mieć maksymalnie {MAX_OCR_PAGES} stron"})
-                page_texts = extract_native_text(input_path, temp_path, pages)
-                if page_texts is None:
-                    page_texts = ocr_pdf(input_path, temp_path, pages)
                 output_path = temp_path / "output.docx"
-                build_docx(page_texts, output_path, Path(original_name).stem)
+                if layout_mode:
+                    build_layout_docx(input_path, temp_path, output_path, pages)
+                else:
+                    page_texts = extract_native_text(input_path, temp_path, pages)
+                    if page_texts is None:
+                        page_texts = ocr_pdf(input_path, temp_path, pages)
+                    build_docx(page_texts, output_path, Path(original_name).stem)
                 payload = output_path.read_bytes()
             return self.send_binary(200, payload, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", output_name)
         except subprocess.TimeoutExpired:

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#eef3f1">
   <title>Konwerter</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <main class="converter">
@@ -74,6 +74,8 @@
         <aside class="settings ocr-settings">
           <span class="section-label">PRYWATNE OCR</span>
           <p>Dokument jest tymczasowo przetwarzany na Twoim VPS i usuwany zaraz po utworzeniu pliku Word.</p>
+          <label>Tryb konwersji<select id="ocrMode"><option value="layout" selected>Zachowaj wygląd i układ</option><option value="text">Czysty edytowalny tekst</option></select></label>
+          <div class="info-box" id="ocrModeInfo">Odtwarza tabele, kolumny, obrazy, pozycje i formatowanie. Wynik jest edytowalny, ale przy trudnych skanach może wymagać drobnych poprawek.</div>
           <div class="auth-box" id="ocrAuth" hidden><label>Hasło do Notatnika<input id="ocrPassword" type="password" autocomplete="current-password" placeholder="Wpisz hasło"></label><small id="ocrAuthError"></small></div>
           <button class="primary" id="ocrConvert" disabled>Rozpoznaj i pobierz Word <span>→</span></button>
           <div class="ocr-warning">Czas konwersji zależy od liczby stron i jakości skanu.</div>
@@ -84,6 +86,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="busy" id="busy" hidden><div class="spinner"></div><strong id="busyText">Przetwarzam…</strong></div>
   <script src="../../assets/vendor/pdf-lib.min.js"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

@@ -59,14 +59,16 @@ async function ensureOcrLogin(){
   try{await ocrApi('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});$('#ocrPassword').value='';$('#ocrAuth').hidden=true;$('#ocrAuthError').textContent='';return true}catch(error){$('#ocrAuthError').textContent=error.message;return false}
 }
 $('#ocrPassword').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('#ocrConvert').click()}});
+$('#ocrMode').addEventListener('change',event=>{$('#ocrModeInfo').textContent=event.target.value==='layout'?'Odtwarza tabele, kolumny, obrazy, pozycje i formatowanie. Wynik jest edytowalny, ale przy trudnych skanach może wymagać drobnych poprawek.':'Tworzy lekki dokument z samym rozpoznanym tekstem, akapitami i podziałem na strony.'});
 $('#ocrConvert').addEventListener('click',async()=>{
   if(!ocrFile)return toast('Najpierw wybierz PDF');
   try{
     if(!await ensureOcrLogin())return;
     busy(true,'OCR analizuje dokument… To może potrwać kilka minut.');
-    const response=await ocrApi('/api/ocr/pdf-to-word',{method:'POST',headers:{'Content-Type':'application/pdf','X-Filename':encodeURIComponent(ocrFile.name)},body:ocrFile});
+    const mode=$('#ocrMode').value;
+    const response=await ocrApi('/api/ocr/pdf-to-word',{method:'POST',headers:{'Content-Type':'application/pdf','X-Filename':encodeURIComponent(ocrFile.name),'X-OCR-Mode':mode},body:ocrFile});
     const blob=await response.blob();
-    download(blob,`${ocrFile.name.replace(/\.pdf$/i,'')}-OCR.docx`);
+    download(blob,`${ocrFile.name.replace(/\.pdf$/i,'')}-${mode==='layout'?'uklad-OCR':'OCR'}.docx`);
     toast('Dokument Word jest gotowy');
   }catch(error){
     console.error(error);if(error.status===401)$('#ocrAuth').hidden=false;toast(error.message);
